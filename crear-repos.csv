@@ -1,0 +1,2 @@
+﻿organizacion,repositorio,tipo,descripcion,admin_list,write_list,read_list,aprobador_pre_list,aprobador_prod_list
+spsdevops,TEST_repo,private,Repositorio de pruebas,,developers,readers,cbrunosps&rortega-sps&developers,cbrunosps&rortega-sps
