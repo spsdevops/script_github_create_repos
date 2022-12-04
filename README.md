@@ -57,7 +57,7 @@ El script es muy simple pero puede ser refactorizado para utilizar funciones y h
 5. Muevete a la carpeta del script y ejecutalo.
    
    ```
-   cd <Ruta del repositorio SAUTO_CICD>/scripts/crear-repos
+   cd <Ruta del repositorio script_github_create_repos>
    .\crear-repos.ps1
    ```
 
