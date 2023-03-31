@@ -115,21 +115,21 @@ Import-Csv ".\crear-repos.csv" |
             }              
         }       
 
-        # Crear ambiente develop 
-        Write-Host " > Creando ambiente develop"
-        $response = gh api -X PUT /repos/$Organizacion/$Repositorio/environments/develop
+        # Crear ambiente dev 
+        Write-Host " > Creando ambiente dev"
+        $response = gh api -X PUT /repos/$Organizacion/$Repositorio/environments/dev
         $salida = $LASTEXITCODE
         if ($debug) {
             Write-Host $response   
         }                
         if ($salida -ne 0) {
-            Write-Host "No se pudo crear el ambiente de develop."
-            $ReporteError = "$ReporteError &No se pudo crear el ambiente de develop."
+            Write-Host "No se pudo crear el ambiente de dev."
+            $ReporteError = "$ReporteError &No se pudo crear el ambiente de dev."
         }
 
-        # Crear ambiente preprod
+        # Crear ambiente test
         # Y configurar equipos aprobadores, si es más de uno están separados por un &
-        Write-Host " > Creando ambiente preprod, con aprobadores:"
+        Write-Host " > Creando ambiente test, con aprobadores:"
         $AprobadoresJSONList = @()
         $AprobadorPreList -Split "&" |
             ForEach-Object {
@@ -163,16 +163,16 @@ Import-Csv ".\crear-repos.csv" |
                 wait_timer = 0
                 reviewers = $AprobadoresJSONList
         } | ConvertTo-Json | 
-            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/preprod --input -   
+            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/test --input -   
         $salida = $LASTEXITCODE
         if ($salida -ne 0) {
-            Write-Host "No se pudo configurar el ambiente preprod (incluyendo los aprobadores)."
-            $ReporteError = "$ReporteError &No se pudo configurar el ambiente preprod (incluyendo los aprobadores)."
+            Write-Host "No se pudo configurar el ambiente test (incluyendo los aprobadores)."
+            $ReporteError = "$ReporteError &No se pudo configurar el ambiente test (incluyendo los aprobadores)."
         }
 
-        # Crear ambiente production
+        # Crear ambiente prod
         # Y configurar equipos aprobadores, si es más de uno están separados por un &
-        Write-Host " > Creando ambiente production, con aprobadores:"
+        Write-Host " > Creando ambiente prod, con aprobadores:"
         
         $AprobadoresJSONList = @()
         $AprobadorProdList -Split "&" |
@@ -206,11 +206,11 @@ Import-Csv ".\crear-repos.csv" |
             wait_timer = 0
             reviewers = $AprobadoresJSONList
         } | ConvertTo-Json | 
-            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/production --input - 
+            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/prod --input - 
         $salida = $LASTEXITCODE
         if ($salida -ne 0) {
-                Write-Host "No se pudo configurar el ambiente production (incluyendo los aprobadores)."
-                $ReporteError = "$ReporteError &No se pudo configurar el ambiente production (incluyendo los aprobadores)."
+                Write-Host "No se pudo configurar el ambiente prod (incluyendo los aprobadores)."
+                $ReporteError = "$ReporteError &No se pudo configurar el ambiente prod (incluyendo los aprobadores)."
         }
 
         # Habilitar Github Actions. Solo se puede habilitar la configuración selected para tomar las acciones seleccionadas por el administrador de la organización.        
