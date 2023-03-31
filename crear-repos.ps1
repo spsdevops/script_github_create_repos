@@ -53,60 +53,67 @@ Import-Csv ".\crear-repos.csv" |
         }
 
         
+
         # Agregar equipo como administrador, si es más de uno están separados por un &
-        Write-Host " > Agregando equipos administradores"
-        
-        $AdminList -Split "&" |
-        ForEach-Object {
-            $Team = $_
-            Write-Host "   -$Team" 
-            $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='admin'
-            $salida = $LASTEXITCODE
-            if ($debug) {
-                Write-Host $response
-            }
-            if ($salida -ne 0) {
-                Write-Host "No se pudo configurar a los administradores $Team"
-                $ReporteError = "$ReporteError &No se pudo configurar a los administradores $Team"
-            }
-        }            
+        if ($AdminList) {
+            Write-Host " > Agregando equipos administradores"
+            
+            $AdminList -Split "&" |
+            ForEach-Object {
+                $Team = $_
+                Write-Host "   -$Team" 
+                $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='admin'
+                $salida = $LASTEXITCODE
+                if ($debug) {
+                    Write-Host $response
+                }
+                if ($salida -ne 0) {
+                    Write-Host "No se pudo configurar a los administradores $Team"
+                    $ReporteError = "$ReporteError &No se pudo configurar a los administradores $Team"
+                }
+            }      
+        }       
 
         # Agregar equipo con permisos de escritura, si es más de uno están separados por un &
-        Write-Host " > Agregando equipos con permisos de escritura (push)"
-        
-        $WriteList -Split "&" |
-        ForEach-Object {
-            $Team = $_
-            Write-Host "   -$Team" 
-            $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='push'
-            $salida = $LASTEXITCODE
-            if ($debug) {
-                Write-Host $response   
-            }
-            if ($salida -ne 0) {
-                Write-Host "No se pudo configurar al equipo $Team"
-                $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
-            }
-        }            
+        if ($WriteList) {
+            Write-Host " > Agregando equipos con permisos de escritura (push)"
+            
+            $WriteList -Split "&" |
+            ForEach-Object {
+                $Team = $_
+                Write-Host "   -$Team" 
+                $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='push'
+                $salida = $LASTEXITCODE
+                if ($debug) {
+                    Write-Host $response   
+                }
+                if ($salida -ne 0) {
+                    Write-Host "No se pudo configurar al equipo $Team"
+                    $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
+                }
+            }            
 
+        }       
 
         # Agregar equipo con permisos de lectura, si es más de uno están separados por un &
-        Write-Host " > Agregando equipos con permisos de lectura (pull)"
-        
-        $ReadList -Split "&" |
-        ForEach-Object {
-            $Team = $_
-            Write-Host "   -$Team" 
-            $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='pull'
-            $salida = $LASTEXITCODE
-            if ($debug) {
-                Write-Host $response   
-            }
-            if ($salida -ne 0) {
-                Write-Host "No se pudo configurar al equipo $Team"
-                $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
-            }
-        }  
+        if ($ReadList) {    
+            Write-Host " > Agregando equipos con permisos de lectura (pull)"
+            
+            $ReadList -Split "&" |
+            ForEach-Object {
+                $Team = $_
+                Write-Host "   -$Team" 
+                $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='pull'
+                $salida = $LASTEXITCODE
+                if ($debug) {
+                    Write-Host $response   
+                }
+                if ($salida -ne 0) {
+                    Write-Host "No se pudo configurar al equipo $Team"
+                    $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
+                }
+            }              
+        }       
 
         # Crear ambiente develop 
         Write-Host " > Creando ambiente develop"
