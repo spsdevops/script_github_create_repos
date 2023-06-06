@@ -30,7 +30,7 @@ Import-Csv ".\crear-repos.csv" |
         # Crear repositorio con descripción y tipo (internal o private)
         Write-Host " > Creando repositorio"
         
-        $response = gh repo create $Organizacion/$Repositorio -d `'$Descripcion`' --$Tipo
+        $response = gh repo create $Organizacion/$Repositorio -d `'$Descripcion`' --$Tipo --add-readme
         $salida = $LASTEXITCODE
         if ($salida -eq 0) {
             $ReporteUrl = $response
@@ -53,83 +53,76 @@ Import-Csv ".\crear-repos.csv" |
         }
 
         
-
         # Agregar equipo como administrador, si es más de uno están separados por un &
-        if ($AdminList) {
-            Write-Host " > Agregando equipos administradores"
-            
-            $AdminList -Split "&" |
-            ForEach-Object {
-                $Team = $_
-                Write-Host "   -$Team" 
-                $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='admin'
-                $salida = $LASTEXITCODE
-                if ($debug) {
-                    Write-Host $response
-                }
-                if ($salida -ne 0) {
-                    Write-Host "No se pudo configurar a los administradores $Team"
-                    $ReporteError = "$ReporteError &No se pudo configurar a los administradores $Team"
-                }
-            }      
-        }       
+        Write-Host " > Agregando equipos administradores"
+        
+        $AdminList -Split "&" |
+        ForEach-Object {
+            $Team = $_
+            Write-Host "   -$Team" 
+            $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='admin'
+            $salida = $LASTEXITCODE
+            if ($debug) {
+                Write-Host $response
+            }
+            if ($salida -ne 0) {
+                Write-Host "No se pudo configurar a los administradores $Team"
+                $ReporteError = "$ReporteError &No se pudo configurar a los administradores $Team"
+            }
+        }            
 
         # Agregar equipo con permisos de escritura, si es más de uno están separados por un &
-        if ($WriteList) {
-            Write-Host " > Agregando equipos con permisos de escritura (push)"
-            
-            $WriteList -Split "&" |
-            ForEach-Object {
-                $Team = $_
-                Write-Host "   -$Team" 
-                $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='push'
-                $salida = $LASTEXITCODE
-                if ($debug) {
-                    Write-Host $response   
-                }
-                if ($salida -ne 0) {
-                    Write-Host "No se pudo configurar al equipo $Team"
-                    $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
-                }
-            }            
+        Write-Host " > Agregando equipos con permisos de escritura (push)"
+        
+        $WriteList -Split "&" |
+        ForEach-Object {
+            $Team = $_
+            Write-Host "   -$Team" 
+            $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='push'
+            $salida = $LASTEXITCODE
+            if ($debug) {
+                Write-Host $response   
+            }
+            if ($salida -ne 0) {
+                Write-Host "No se pudo configurar al equipo $Team"
+                $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
+            }
+        }            
 
-        }       
 
         # Agregar equipo con permisos de lectura, si es más de uno están separados por un &
-        if ($ReadList) {    
-            Write-Host " > Agregando equipos con permisos de lectura (pull)"
-            
-            $ReadList -Split "&" |
-            ForEach-Object {
-                $Team = $_
-                Write-Host "   -$Team" 
-                $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='pull'
-                $salida = $LASTEXITCODE
-                if ($debug) {
-                    Write-Host $response   
-                }
-                if ($salida -ne 0) {
-                    Write-Host "No se pudo configurar al equipo $Team"
-                    $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
-                }
-            }              
-        }       
+        Write-Host " > Agregando equipos con permisos de lectura (pull)"
+        
+        $ReadList -Split "&" |
+        ForEach-Object {
+            $Team = $_
+            Write-Host "   -$Team" 
+            $response = gh api -X PUT orgs/$Organizacion/teams/$Team/repos/$Organizacion/$Repositorio -f permission='pull'
+            $salida = $LASTEXITCODE
+            if ($debug) {
+                Write-Host $response   
+            }
+            if ($salida -ne 0) {
+                Write-Host "No se pudo configurar al equipo $Team"
+                $ReporteError = "$ReporteError &No se pudo configurar al equipo $Team"
+            }
+        }  
 
-        # Crear ambiente dev 
-        Write-Host " > Creando ambiente dev"
-        $response = gh api -X PUT /repos/$Organizacion/$Repositorio/environments/dev
+        # Crear ambiente develop 
+        Write-Host " > Creando ambiente develop"
+        $response = gh api -X PUT /repos/$Organizacion/$Repositorio/environments/develop
         $salida = $LASTEXITCODE
         if ($debug) {
             Write-Host $response   
         }                
         if ($salida -ne 0) {
-            Write-Host "No se pudo crear el ambiente de dev."
-            $ReporteError = "$ReporteError &No se pudo crear el ambiente de dev."
+            Write-Host "No se pudo crear el ambiente de develop."
+            $ReporteError = "$ReporteError &No se pudo crear el ambiente de develop."
         }
 
-        # Crear ambiente test
+        # Crear ambiente preprod
         # Y configurar equipos aprobadores, si es más de uno están separados por un &
-        Write-Host " > Creando ambiente test, con aprobadores:"
+        Write-Host " > Creando ambiente preprod, con aprobadores:"
         $AprobadoresJSONList = @()
         $AprobadorPreList -Split "&" |
             ForEach-Object {
@@ -163,16 +156,16 @@ Import-Csv ".\crear-repos.csv" |
                 wait_timer = 0
                 reviewers = $AprobadoresJSONList
         } | ConvertTo-Json | 
-            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/test --input -   
+            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/preprod --input -   
         $salida = $LASTEXITCODE
         if ($salida -ne 0) {
-            Write-Host "No se pudo configurar el ambiente test (incluyendo los aprobadores)."
-            $ReporteError = "$ReporteError &No se pudo configurar el ambiente test (incluyendo los aprobadores)."
+            Write-Host "No se pudo configurar el ambiente preprod (incluyendo los aprobadores)."
+            $ReporteError = "$ReporteError &No se pudo configurar el ambiente preprod (incluyendo los aprobadores)."
         }
 
-        # Crear ambiente prod
+        # Crear ambiente production
         # Y configurar equipos aprobadores, si es más de uno están separados por un &
-        Write-Host " > Creando ambiente prod, con aprobadores:"
+        Write-Host " > Creando ambiente production, con aprobadores:"
         
         $AprobadoresJSONList = @()
         $AprobadorProdList -Split "&" |
@@ -206,11 +199,11 @@ Import-Csv ".\crear-repos.csv" |
             wait_timer = 0
             reviewers = $AprobadoresJSONList
         } | ConvertTo-Json | 
-            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/prod --input - 
+            gh api -X PUT /repos/$Organizacion/$Repositorio/environments/production --input - 
         $salida = $LASTEXITCODE
         if ($salida -ne 0) {
-                Write-Host "No se pudo configurar el ambiente prod (incluyendo los aprobadores)."
-                $ReporteError = "$ReporteError &No se pudo configurar el ambiente prod (incluyendo los aprobadores)."
+                Write-Host "No se pudo configurar el ambiente production (incluyendo los aprobadores)."
+                $ReporteError = "$ReporteError &No se pudo configurar el ambiente production (incluyendo los aprobadores)."
         }
 
         # Habilitar Github Actions. Solo se puede habilitar la configuración selected para tomar las acciones seleccionadas por el administrador de la organización.        
@@ -232,4 +225,19 @@ Import-Csv ".\crear-repos.csv" |
             error = $ReporteError
             }  | 
         Export-Csv -NoTypeInformation -Append -Path ".\reporte_$Timestamp.csv" 
+
+        # Muestra repositorio a proteger (Mezcla)
+        Write-Host "------- " "$Organizacion/$Repositorio" "----------"
+        
+        Write-Host " > protegiendo ramas"
+        $response = gh api repos/$Organizacion/$Repositorio --jq .node_id
+        Write-Host "    * ID repo: $response"
+
+        gh api graphql -f query='
+        mutation($repositoryId:ID!,$branch:String!) {
+          createBranchProtectionRule(input: {
+            repositoryId: $repositoryId
+            pattern: $branch
+          }) { clientMutationId }
+        }' -f repositoryId="$response" -f branch="releases/*"
     }
